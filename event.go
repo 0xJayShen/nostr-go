@@ -11,27 +11,16 @@ import (
 )
 
 type Event struct {
-	ID        string `json:"id"`
-	PubKey    string `json:"pubkey"`
-	Content   string `json:"content"`
-	Sig       string `json:"sig"`
-	Kind      int    `json:"kind"`
-	Tags      Tags   `json:"tags"`
-	CreatedAt int64  `json:"created_at"`
-
-	// anything here will be mashed together with the main event object when serializing
-	extra map[string]any
+	ID        string         `json:"id"`
+	PubKey    string         `json:"pubkey"`
+	Content   string         `json:"content"`
+	Sig       string         `json:"sig"`
+	Kind      int            `json:"kind"`
+	Tags      Tags           `json:"tags"`
+	CreatedAt int64          `json:"created_at"`
+	extra     map[string]any `json:"extra"`
 }
 
-func (e *Event) GetID() (string, error) {
-	res, err := e.Serialize()
-	if err != nil {
-		return "", err
-	}
-
-	h := sha256.Sum256(res)
-	return hex.EncodeToString(h[:]), nil
-}
 func (e *Event) Serialize() ([]byte, error) {
 	return json.Marshal([]interface{}{
 		0,
@@ -43,6 +32,15 @@ func (e *Event) Serialize() ([]byte, error) {
 	})
 }
 
+func (e *Event) GetID() (string, error) {
+	res, err := e.Serialize()
+	if err != nil {
+		return "", err
+	}
+
+	h := sha256.Sum256(res)
+	return hex.EncodeToString(h[:]), nil
+}
 func (e *Event) CheckSignature() (bool, error) {
 	pk, err := hex.DecodeString(e.PubKey)
 	if err != nil {
@@ -54,7 +52,6 @@ func (e *Event) CheckSignature() (bool, error) {
 		return false, fmt.Errorf("event has invalid pubkey '%s': %w", e.PubKey, err)
 	}
 
-	// read signature
 	s, err := hex.DecodeString(e.Sig)
 	if err != nil {
 		return false, fmt.Errorf("signature '%s' is invalid hex: %w", e.Sig, err)
@@ -65,16 +62,14 @@ func (e *Event) CheckSignature() (bool, error) {
 		return false, fmt.Errorf("failed to parse signature: %w", err)
 	}
 
-	// check signature
 	res, err := e.Serialize()
 	if err != nil {
 		return false, err
 	}
+
 	hash := sha256.Sum256(res)
 	return sig.Verify(hash[:], pubkey), nil
 }
-
-// Sign signs an event with a given privateKey
 func (e *Event) Sign(privateKey string) error {
 	res, err := e.Serialize()
 	if err != nil {
@@ -88,7 +83,6 @@ func (e *Event) Sign(privateKey string) error {
 	}
 
 	sk, _ := btcec.PrivKeyFromBytes(s)
-
 	sig, err := schnorr.Sign(sk, h[:])
 	if err != nil {
 		return err
@@ -106,8 +100,6 @@ func (e *Event) SetExtra(key string, value any) {
 	e.extra[key] = value
 }
 
-// GetExtra tries to get a value under the given key that may be present in the event object
-// but is hidden in the basic type since it is out of the spec.
 func (e *Event) GetExtra(key string) any {
 	ival, _ := e.extra[key]
 	return ival
@@ -141,8 +133,6 @@ func (e *Event) GetExtraNumber(key string) float64 {
 	return 0
 }
 
-// GetExtraBoolean is like [Event.GetExtra], but only works if the value is a boolean,
-// otherwise returns the zero-value.
 func (e *Event) GetExtraBoolean(key string) bool {
 	ival, ok := e.extra[key]
 	if !ok {
