@@ -31,25 +31,25 @@ func main() {
 ### Create, sign and verify events
 ```go
     event := nostr_go.Event{
-		Kind:      1,
-		CreatedAt: time.Now().Unix(),
-		Tags:      []nostr_go.Tag{},
-		Content:   "hello",
-		PubKey:    PubKey,
-	}
-	eventID, err := event.GetID()
-	if err != nil {
-		panic(err)
-	}
-
-	event.ID = eventID
-	if err := event.Sign(privateKey); err != nil {
-		panic(err)
-	}
-
-	ok, err := event.CheckSignature()
-	if !ok || err != nil {
-		fmt.Println(ok)
-		panic(err)
-	}
+        Kind:      1,
+        CreatedAt: time.Now().Unix(),
+        Tags:      []nostr_go.Tag{},
+        Content:   "hello",
+        PubKey:    PubKey,
+    }
+    eventID, err := event.GetID()
+    if err != nil {
+        panic(err)
+    }
+    
+    event.ID = eventID
+    if err := event.Sign(privateKey); err != nil {
+        panic(err)
+    }
+    
+    ok, err := event.CheckSignature()
+    if !ok || err != nil {
+        fmt.Println(ok)
+        panic(err)
+    }
 ```
