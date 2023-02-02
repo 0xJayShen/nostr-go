@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
-	"nostr-go/nip/nip06"
-	"nostr-go/nip/nip19"
+	nostr_go "nostr-go"
+	"nostr-go/nips/nip06"
+	"nostr-go/nips/nip19"
+	"time"
 )
 
 func main() {
@@ -31,4 +33,27 @@ func main() {
 		panic(err)
 	}
 	fmt.Printf("public key bech32-formatted is %s \n", PubKeyBech32)
+
+	event := nostr_go.Event{
+		Kind:      1,
+		CreatedAt: time.Now().Unix(),
+		Tags:      []nostr_go.Tag{},
+		Content:   "hello",
+		PubKey:    PubKey,
+	}
+	eventID, err := event.GetID()
+	if err != nil {
+		panic(err)
+	}
+
+	event.ID = eventID
+	if err := event.Sign(privateKey); err != nil {
+		panic(err)
+	}
+
+	ok, err := event.CheckSignature()
+	if !ok || err != nil {
+		fmt.Println(ok)
+		panic(err)
+	}
 }
