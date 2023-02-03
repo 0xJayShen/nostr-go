@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	nostr_go "nostr-go"
+	"nostr-go"
 	"nostr-go/nips/nip06"
 	"nostr-go/nips/nip19"
 	"time"

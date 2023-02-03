@@ -18,7 +18,7 @@ type Event struct {
 	Kind      int            `json:"kind"`
 	Tags      Tags           `json:"tags"`
 	CreatedAt int64          `json:"created_at"`
-	extra     map[string]any `json:"extra"`
+	Extra     map[string]any `json:"Extra"`
 }
 
 func (e *Event) Serialize() ([]byte, error) {
@@ -47,7 +47,7 @@ func (e *Event) CheckSignature() (bool, error) {
 		return false, fmt.Errorf("event pubkey '%s' is invalid hex: %w", e.PubKey, err)
 	}
 
-	pubkey, err := schnorr.ParsePubKey(pk)
+	pubKey, err := schnorr.ParsePubKey(pk)
 	if err != nil {
 		return false, fmt.Errorf("event has invalid pubkey '%s': %w", e.PubKey, err)
 	}
@@ -68,7 +68,7 @@ func (e *Event) CheckSignature() (bool, error) {
 	}
 
 	hash := sha256.Sum256(res)
-	return sig.Verify(hash[:], pubkey), nil
+	return sig.Verify(hash[:], pubKey), nil
 }
 func (e *Event) Sign(privateKey string) error {
 	res, err := e.Serialize()
@@ -94,34 +94,34 @@ func (e *Event) Sign(privateKey string) error {
 }
 
 func (e *Event) SetExtra(key string, value any) {
-	if e.extra == nil {
-		e.extra = make(map[string]any)
+	if e.Extra == nil {
+		e.Extra = make(map[string]any)
 	}
-	e.extra[key] = value
+	e.Extra[key] = value
 }
 
 func (e *Event) GetExtra(key string) any {
-	ival, _ := e.extra[key]
-	return ival
-}
-func (e *Event) GetExtraString(key string) string {
-	ival, ok := e.extra[key]
-	if !ok {
-		return ""
-	}
-	val, ok := ival.(string)
-	if !ok {
-		return ""
-	}
+	val, _ := e.Extra[key]
 	return val
 }
+func (e *Event) GetExtraString(key string) string {
+	val, ok := e.Extra[key]
+	if !ok {
+		return ""
+	}
+	sval, ok := val.(string)
+	if !ok {
+		return ""
+	}
+	return sval
+}
 func (e *Event) GetExtraNumber(key string) float64 {
-	ival, ok := e.extra[key]
+	val, ok := e.Extra[key]
 	if !ok {
 		return 0
 	}
 
-	switch val := ival.(type) {
+	switch val := val.(type) {
 	case float64:
 		return val
 	case int:
@@ -134,13 +134,14 @@ func (e *Event) GetExtraNumber(key string) float64 {
 }
 
 func (e *Event) GetExtraBoolean(key string) bool {
-	ival, ok := e.extra[key]
+	val, ok := e.Extra[key]
 	if !ok {
 		return false
 	}
-	val, ok := ival.(bool)
+
+	bval, ok := val.(bool)
 	if !ok {
 		return false
 	}
-	return val
+	return bval
 }
